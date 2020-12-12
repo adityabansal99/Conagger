@@ -1,17 +1,49 @@
-from components import app
-import bs4
 import aiohttp
 import asyncio
+from components import app, source
+from components import source
 from flask import request
 
+QUANTA_MAGAZINE = 'quantamagazine'
+REUTERS = 'reuters'
+TECH_CRUNCH = 'techcrunch'
+WIRED = 'wired'
 
 source_uri = {
-    'reddit'          : 'https://www.reddit.com',
-    'wired'           : 'https://www.wired.com/',
-    'reuters'         : 'https://www.reuters.com/',
-    'techcrunch'      : 'https://www.techcrunch.com/',
-    'quantamagazine'  : 'https://www.quantamagazine.org/'
+    QUANTA_MAGAZINE  : 'https://www.quantamagazine.org/',
+    REUTERS          : 'https://www.reuters.com/',
+    TECH_CRUNCH      : 'https://www.techcrunch.com/',
+    WIRED            : 'https://www.wired.com/',
 }
+
+
+async def fetch_source_response(session,url):
+    async with session.get(url,headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0'}) as response:
+        body = (await response.text())
+        return body
+
+
+async def fetch_sources_response(content_sources):
+    responses = []
+    async with aiohttp.ClientSession() as session:
+        for content_source in content_sources:
+            resp_body = asyncio.ensure_future(fetch_source_response(session,content_source.uri))
+            responses.append(resp_body)
+            content_source.response = resp_body
+        await asyncio.gather(*responses, return_exceptions=True)
+
+
+def make_sources(content_sources):
+    sources = []
+    if QUANTA_MAGAZINE in content_sources:
+        sources.append(source.QuantaMagazine(source_uri[QUANTA_MAGAZINE]))
+    if REUTERS in content_sources:
+        sources.append(source.Reuters(source_uri[REUTERS]))
+    if TECH_CRUNCH in content_sources:
+        sources.append(source.TechCrunch(source_uri[TECH_CRUNCH]))
+    if WIRED in content_sources:
+        sources.append(source.Wired(source_uri[WIRED]))
+
 
 @app.route('/')
 def index():
@@ -20,25 +52,14 @@ def index():
 
 @app.route('/home',methods=['POST'])
 def home():
-    content_sources = request.form.get('content_sources')
+    content_sources = request.form.get('content_sources').split(',')
+    sources = make_sources(content_sources)
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
-    loop.run_until_complete(fetch_sources((source_uri[source] for source in content_sources.split(','))))
+    loop.run_until_complete(fetch_sources_response(sources))
+
+    
     return "Completed"
 
 
-
-async def fetch_source(session,url):
-    async with session.get(url,headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0'}) as response:
-        print(response.url)
-        return response
-
-async def fetch_sources(sources):
-    responses = []
-    async with aiohttp.ClientSession() as session:
-        for url in sources:
-            resp = asyncio.ensure_future(fetch_source(session,url))
-            responses.append(resp)
-        await asyncio.gather(*responses, return_exceptions=True)
-    for response in responses:
-        print(response.result())
