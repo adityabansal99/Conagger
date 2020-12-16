@@ -6,6 +6,7 @@ class Source():
     """
     def __init__(self,uri):
         self._uri = uri
+        self._posts = dict()
 
     @property
     def uri(self):
@@ -24,11 +25,16 @@ class Source():
         if resp.ok:
             self._response = resp
             self._soup = bs4.BeautifulSoup(resp.content,"html.parser")
+            self.parse()
         else:
             raise ValueError("Something went wrong with response received from "+resp.url+". Reson: "+resp.reason)
 
+    @property
+    def posts(self):
+        return self._posts
+
     def parse(self):
-        raise NotImplementedError
+        raise NotImplementedError("Parse Method is not implemented for source:",type(self).__name__)
 
 
 class QuantaMagazine(Source):
@@ -36,7 +42,24 @@ class QuantaMagazine(Source):
     QuantaMagazine content parsing and management
     """
     def parse(self):
-        pass
+
+        # Main post 
+        self._posts[self._soup.select("h1.noe:nth-child(1)")[0].get_text()] = self._uri + self._soup.select(".hero-title > a")[0]['href']
+    
+        # div.home__posts--top > div > div > div.card__content > a > h2
+        posts_text = [
+            heading.get_text() 
+            for heading in self._soup.select("div.two--large > div:nth-child(1) > div:nth-child(2) > a:nth-child(2) > h2:nth-child(1)")
+        ]
+        posts_relative_link =[
+            link['href'] 
+            for link in self._soup.select("div.two--large > div:nth-child(1) > div:nth-child(2) > a")
+        ]
+
+        for post_text, post_relative_link in zip(posts_text,posts_relative_link):
+            self._posts[post_text] = self._uri + post_relative_link
+
+
 
 
 class Reuters(Source):
@@ -44,7 +67,23 @@ class Reuters(Source):
     Reuters content parsing and management
     """
     def parse(self):
-        pass
+        
+        # Main Post
+        self._posts[self._soup.("section.right-now-module > div:nth-child(2) > h2 > a")[0].get_text()] = \
+        self._uri + self._soup.select("section.right-now-module > div:nth-child(2) >h2 > a")[0]['href']
+
+        posts_text = [
+            heading.get_text() 
+            for heading in self._soup.select("#hp-top-news-top > section > div > article > div > a > h3")
+        ]
+        posts_relative_link =[
+            link['href'] 
+            for link in self._soup.select("#hp-top-news-top > section > div > article > div > a")
+        ]
+
+        for post_text, post_relative_link in zip(posts_text,posts_relative_link):
+            self._posts[post_text] = self._uri + post_relative_link
+        
 
 
 class TechCrunch(Source):
