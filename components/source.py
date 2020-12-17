@@ -3,10 +3,12 @@ import bs4
 class Source():
     """
     Base class for all content sources
+    Should not be used to instantiate objects
     """
-    def __init__(self,uri):
+    def __init__(self,uri,source_name):
         self._uri = uri
         self._posts = dict()
+        self._source_name = source_name
 
     @property
     def uri(self):
@@ -25,7 +27,7 @@ class Source():
         if resp.ok:
             self._response = resp
             self._soup = bs4.BeautifulSoup(resp.content,"html.parser")
-            self.parse()
+            self._parse()
         else:
             raise ValueError("Something went wrong with response received from "+resp.url+". Reson: "+resp.reason)
 
@@ -33,7 +35,11 @@ class Source():
     def posts(self):
         return self._posts
 
-    def parse(self):
+    @property
+    def source_name(self):
+        return self._source_name
+
+    def _parse(self):
         raise NotImplementedError("Parse Method is not implemented for source:",type(self).__name__)
 
 
@@ -41,7 +47,7 @@ class QuantaMagazine(Source):
     """
     QuantaMagazine content parsing and management
     """
-    def parse(self):
+    def _parse(self):
 
         # Main post 
         self._posts[self._soup.select("h1.noe:nth-child(1)")[0].get_text()] = self._uri + self._soup.select(".hero-title > a")[0]['href']
@@ -66,7 +72,7 @@ class Reuters(Source):
     """
     Reuters content parsing and management
     """
-    def parse(self):
+    def _parse(self):
         
         # Main Post
         self._posts[self._soup.("section.right-now-module > div:nth-child(2) > h2 > a")[0].get_text()] = \
@@ -90,7 +96,7 @@ class TechCrunch(Source):
     """
     TechCrunch content parsing and management
     """
-    def parse(self):
+    def _parse(self):
         
         #root > div > div > div > div > div > header > h2 > a
         posts_text = [
@@ -110,7 +116,7 @@ class Wired(Source):
     """
     Wired content parsing and management
     """
-    def parse(self):
+    def _parse(self):
         
     #div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)
 
