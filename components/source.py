@@ -91,7 +91,19 @@ class TechCrunch(Source):
     TechCrunch content parsing and management
     """
     def parse(self):
-        pass
+        
+        #root > div > div > div > div > div > header > h2 > a
+        posts_text = [
+            heading.get_text() 
+            for heading in self._soup.select("#root > div > div > div > div > div > header > h2 > a")
+        ]
+        posts_link =[
+            link['href'] 
+            for link in self._soup.select("#hp-top-news-top > section > div > article > div > a")
+        ]
+
+        for post_text, post_link in zip(posts_text,posts_link):
+            self._posts[post_text] = post_link
 
 
 class Wired(Source):
@@ -99,4 +111,23 @@ class Wired(Source):
     Wired content parsing and management
     """
     def parse(self):
-        pass
+        
+    #div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)
+
+    posts_text = [
+            heading.get_text() 
+            for heading in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2) > h2")
+        ] + [
+            heading.get_text() 
+            for heading in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2) > h2")
+        ]
+        posts_relative_link =[
+            link['href'] 
+            for link in self._soup.select("#div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)")
+        ] + [
+            link['href'] 
+            for link in self._soup.select("#div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2)")
+        ]
+
+        for post_text, post_relative_link in zip(posts_text,posts_relative_link):
+            self._posts[post_text] = self._uri + post_relative_link
