@@ -40,7 +40,8 @@ class Source():
         return self._source_name
 
     def _parse(self):
-        raise NotImplementedError("Parse Method is not implemented for source:",type(self).__name__)
+        raise NotImplementedError("Parse Method is not implemented for source: ",type(self).__name__)
+
 
 
 class QuantaMagazine(Source):
@@ -50,11 +51,11 @@ class QuantaMagazine(Source):
     def _parse(self):
 
         # Main post 
-        self._posts[self._soup.select("h1.noe:nth-child(1)")[0].get_text()] = self._uri + self._soup.select(".hero-title > a")[0]['href']
+        self._posts[self._soup.select("h1.noe:nth-child(1)")[0].get_text().strip()] = self._uri + self._soup.select(".hero-title > a")[0]['href']
     
         # div.home__posts--top > div > div > div.card__content > a > h2
         posts_text = [
-            heading.get_text() 
+            heading.get_text().strip() 
             for heading in self._soup.select("div.two--large > div:nth-child(1) > div:nth-child(2) > a:nth-child(2) > h2:nth-child(1)")
         ]
         posts_relative_link =[
@@ -67,7 +68,6 @@ class QuantaMagazine(Source):
 
 
 
-
 class Reuters(Source):
     """
     Reuters content parsing and management
@@ -75,11 +75,11 @@ class Reuters(Source):
     def _parse(self):
         
         # Main Post
-        self._posts[self._soup.("section.right-now-module > div:nth-child(2) > h2 > a")[0].get_text()] = \
+        self._posts[self._soup.("section.right-now-module > div:nth-child(2) > h2 > a")[0].get_text().strip()] = \
         self._uri + self._soup.select("section.right-now-module > div:nth-child(2) >h2 > a")[0]['href']
 
         posts_text = [
-            heading.get_text() 
+            heading.get_text().strip() 
             for heading in self._soup.select("#hp-top-news-top > section > div > article > div > a > h3")
         ]
         posts_relative_link =[
@@ -100,7 +100,7 @@ class TechCrunch(Source):
         
         #root > div > div > div > div > div > header > h2 > a
         posts_text = [
-            heading.get_text() 
+            heading.get_text().strip() 
             for heading in self._soup.select("#root > div > div > div > div > div > header > h2 > a")
         ]
         posts_link =[
@@ -112,20 +112,20 @@ class TechCrunch(Source):
             self._posts[post_text] = post_link
 
 
+
 class Wired(Source):
     """
     Wired content parsing and management
     """
     def _parse(self):
         
-    #div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)
-
-    posts_text = [
-            heading.get_text() 
-            for heading in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2) > h2")
+        #div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)
+        posts_text = [
+                heading.get_text().strip() 
+                for heading in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2) > h2")
         ] + [
-            heading.get_text() 
-            for heading in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2) > h2")
+                heading.get_text().strip() 
+                for heading in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2) > h2")
         ]
         posts_relative_link =[
             link['href'] 
@@ -133,6 +133,48 @@ class Wired(Source):
         ] + [
             link['href'] 
             for link in self._soup.select("#div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2)")
+        ]
+
+        for post_text, post_relative_link in zip(posts_text,posts_relative_link):
+            self._posts[post_text] = self._uri + post_relative_link
+
+
+class TheVerge(Source):
+    """
+    TheVerge content management and parsing
+    """
+    def _parse(self):
+
+        # div.c-seven-up__main > div > div:nth-child(2) > h2 > a
+        posts_text = [
+            heading.get_text().strip() 
+            for heading in self._soup.select("div.c-seven-up__main > div > div:nth-child(2) > h2 > a")
+        ]
+        posts_link =[
+            link['href'] 
+            for link in self._soup.select("div.c-seven-up__main > div > div:nth-child(2) > h2 > a")
+        ]
+
+        for post_text, post_link in zip(posts_text,posts_link):
+            self._posts[post_text] = post_link
+        
+
+
+class BBC(Source):
+    """
+    BBC content management and parsing
+    """
+    def _parse(self):
+
+        # Does not pick reels posts
+        # ul.media-list > li > div > a:nth-child(3)
+        posts_text = [
+            heading.get_text().strip() 
+            for heading in self._soup.select("ul.media-list > li > div > a:nth-child(3)")
+        ]
+        posts_relative_link =[
+            link['href'] 
+            for link in self._soup.select("ul.media-list > li > div > a:nth-child(3)")
         ]
 
         for post_text, post_relative_link in zip(posts_text,posts_relative_link):
