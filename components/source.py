@@ -24,12 +24,10 @@ class Source():
 
     @response.setter
     def response(self,resp):
-        if resp.ok:
-            self._response = resp
-            self._soup = bs4.BeautifulSoup(resp.content,"html.parser")
-            self._parse()
-        else:
-            raise ValueError("Something went wrong with response received from "+resp.url+". Reson: "+resp.reason)
+        self._response = resp
+        # print(resp)
+        self._soup = bs4.BeautifulSoup(resp,"html.parser")
+        self._parse()
 
     @property
     def posts(self):
@@ -75,7 +73,7 @@ class Reuters(Source):
     def _parse(self):
         
         # Main Post
-        self._posts[self._soup.("section.right-now-module > div:nth-child(2) > h2 > a")[0].get_text().strip()] = \
+        self._posts[self._soup.select("section.right-now-module > div:nth-child(2) > h2 > a")[0].get_text().strip()] = \
         self._uri + self._soup.select("section.right-now-module > div:nth-child(2) >h2 > a")[0]['href']
 
         posts_text = [
@@ -105,8 +103,12 @@ class TechCrunch(Source):
         ]
         posts_link =[
             link['href'] 
-            for link in self._soup.select("#hp-top-news-top > section > div > article > div > a")
+            for link in self._soup.select("#root > div > div > div > div > div > header > h2 > a")
         ]
+
+        # Will refactor later
+        posts_text = posts_text[:6]
+        posts_link = posts_link[:6]
 
         for post_text, post_link in zip(posts_text,posts_link):
             self._posts[post_text] = post_link
@@ -119,7 +121,7 @@ class Wired(Source):
     """
     def _parse(self):
         
-        #div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)
+        # div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)
         posts_text = [
                 heading.get_text().strip() 
                 for heading in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2) > h2")
@@ -129,10 +131,10 @@ class Wired(Source):
         ]
         posts_relative_link =[
             link['href'] 
-            for link in self._soup.select("#div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)")
+            for link in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)")
         ] + [
             link['href'] 
-            for link in self._soup.select("#div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2)")
+            for link in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2)")
         ]
 
         for post_text, post_relative_link in zip(posts_text,posts_relative_link):
@@ -172,10 +174,14 @@ class BBC(Source):
             heading.get_text().strip() 
             for heading in self._soup.select("ul.media-list > li > div > a:nth-child(3)")
         ]
-        posts_relative_link =[
+        posts_link =[
             link['href'] 
             for link in self._soup.select("ul.media-list > li > div > a:nth-child(3)")
         ]
 
-        for post_text, post_relative_link in zip(posts_text,posts_relative_link):
-            self._posts[post_text] = self._uri + post_relative_link
+        # Will refactor later
+        posts_text = posts_text[:6]
+        posts_link = posts_link[:6]
+
+        for post_text, post_link in zip(posts_text,posts_link):
+            self._posts[post_text] = post_link
