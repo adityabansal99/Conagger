@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conagger</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" >
+
+</head>
+<body>
+    <div class="text-center container-fluid">
+        <h1> Conagger </h1>
+    </div>
+    <div class= "container">
+        {% for source_row in sources|batch(2) %}
+        <div class="card-group">
+            {% for source in source_row %}
+            <div class="card border-light">
+                <div class="card-body">
+                    <div class="text-center card-title">
+                        <a href="{{ source.uri }}" class="h3">
+                            <span style="color:#f73859">{{ source.source_name }}</span>
+                        </a>
+                    </div>
+                    <div>
+                        <ul style="list-style: none;">
+                            {% for post_heading, post_link in source.posts.items() %}
+                            <li style="padding: 3px 0 0px 0; border-bottom: 1px solid #eeeded;">
+                                <a href="{{ post_link }}" target="_blank" class="card-link">
+                                    <span style="color: #1e2022;">{{post_heading}}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+    <!-- Inheritance not working :( -->
+    <!-- {% block content %}{% endblock %} -->
+</body>
+</html>
