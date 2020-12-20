@@ -44,23 +44,25 @@ def populate_sources(sources,responses):
         source.response = responses[source.uri].result()
 
 
-async def fetch_source(session,url,user_agent):
-    async with session.get(url,headers={'User-Agent': user_agent}) as response:
+async def fetch_source(session,url,headers):
+    async with session.get(url,headers=headers) as response:
         body = (await response.text())
         return body
 
 
 async def fetch_sources(sources):
     responses = dict()
+    headers = None
     try:
         ua = UserAgent(cache=False)
         user_agent = ua.random
+        headers = {'User-Agent': user_agent}
     except FakeUserAgentError:
-        user_agent = 'YOUR USER AGENT'
+        headers = None
 
     async with aiohttp.ClientSession() as session:
         for source in sources:
-            resp_body = asyncio.ensure_future(fetch_source(session,source.uri,user_agent))
+            resp_body = asyncio.ensure_future(fetch_source(session,source.uri,headers))
             responses[source.uri] = resp_body
         await asyncio.gather(*responses.values(), return_exceptions=True)
     return responses
