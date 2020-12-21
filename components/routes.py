@@ -1,7 +1,6 @@
 import aiohttp
 import asyncio
 from components import app, source
-from components import source
 from fake_useragent import UserAgent
 from flask import render_template, request
 
@@ -69,14 +68,10 @@ async def fetch_sources(sources):
 
 
 @app.route('/')
-def index():
-    return 'Hello World'
-
-
-@app.route('/home',methods=['GET','POST'])
+@app.route('/home',methods=['GET'])
 def home():
-    # content_sources = request.form.get('content_sources').split(',')
-    content_sources = ['QuantaMagazine','Wired','Reuters','TechCrunch','BBC','TheVerge']
+
+    content_sources = [ QUANTA_MAGAZINE, WIRED, REUTERS, TECH_CRUNCH, BBC, THE_VERGE ]
     sources = instantiate_sources(content_sources)
 
     loop = asyncio.new_event_loop()
@@ -85,13 +80,9 @@ def home():
 
     populate_sources(sources,responses)
     
-    # for source in sources:
-    #     print(source.posts)
-    #     print('***************')
     return render_template('base.htm',sources=sources)
 
 
-@app.route('/test')
-def test_jinja():
-    items = [1,2,3,4,5,6,7,8]
-    return render_template('test.htm',items=items)
+@app.route('/science')
+def science_posts():
+    content_sources = []
