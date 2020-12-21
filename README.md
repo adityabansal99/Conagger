@@ -1,5 +1,5 @@
 # Conagger
-Easily extensible custom content aggregator
+A Minimal and Easily extensible custom content aggregator
 
 ## Requirements
  - aiohttp
