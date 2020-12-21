@@ -156,6 +156,10 @@ class TheVerge(Source):
             link['href'] 
             for link in self._soup.select("div.c-seven-up__main > div > div:nth-child(2) > h2 > a")
         ]
+        
+        # Will refactor later
+        posts_text = posts_text[:6]
+        posts_link = posts_link[:6]
 
         for post_text, post_link in zip(posts_text,posts_link):
             self._posts[post_text] = post_link
