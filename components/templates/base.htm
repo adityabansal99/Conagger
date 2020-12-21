@@ -9,19 +9,31 @@
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" >
 
 </head>
-<body>
-    <div class="text-center container-fluid">
-        <h1> Conagger </h1>
-    </div>
-    <div class= "container">
+<body id = 'root-body' style="background-color: #f7fbfc;">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="{{ url_for(request.endpoint) }}"><h5>Conagger</h5></a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
+          <div class="navbar-nav">
+            <a class="nav-link active" href="{{ url_for(request.endpoint) }}">Home</a>
+            <a class="nav-link" href="#">Science</a>
+            <a class="nav-link" href="#">Tech</a>
+            <a class="nav-link" href="#">Add Source</a>
+            <!-- <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a> -->
+          </div>
+        </div>
+      </nav>
+    <div class= "container" style="background-color: #f7fbfc;">
         {% for source_row in sources|batch(2) %}
         <div class="card-group">
             {% for source in source_row %}
             <div class="card border-light">
-                <div class="card-body">
+                <div class="card-body" style="background-color: #f7fbfc;">
                     <div class="text-center card-title">
                         <a href="{{ source.uri }}" class="h3">
-                            <span style="color:#f73859">{{ source.source_name }}</span>
+                            <span style="color:#0f4c75">{{ source.source_name }}</span>
                         </a>
                     </div>
                     <div>
@@ -29,7 +41,7 @@
                             {% for post_heading, post_link in source.posts.items() %}
                             <li style="padding: 3px 0 0px 0; border-bottom: 1px solid #eeeded;">
                                 <a href="{{ post_link }}" target="_blank" class="card-link">
-                                    <span style="color: #1e2022;">{{post_heading}}</span>
+                                    <span style="color: #1b262c;">{{post_heading}}</span>
                                 </a>
                             </li>
                             {% endfor %}
