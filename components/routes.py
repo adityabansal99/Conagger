@@ -1,6 +1,6 @@
 import aiohttp
 import asyncio
-from components import app, source
+from components import app, page_sources
 from fake_useragent import UserAgent
 from flask import render_template, request
 
@@ -10,32 +10,12 @@ TECH_CRUNCH = 'TechCrunch'
 WIRED = 'Wired'
 BBC = 'BBC'
 THE_VERGE = 'TheVerge'
+BUZZFEED = 'BuzzFeed'
+NY_TIMES = 'The New York Times'
+TNW = 'The Next Web'
 
-source_uri = {
-    QUANTA_MAGAZINE  : 'https://www.quantamagazine.org',
-    REUTERS          : 'https://www.reuters.com',
-    TECH_CRUNCH      : 'https://www.techcrunch.com',
-    WIRED            : 'https://www.wired.com',
-    BBC              : 'https://www.bbc.com',
-    THE_VERGE        : 'https://www.theverge.com',
-}
-
-
-def instantiate_sources(content_sources):
-    sources = []
-    if QUANTA_MAGAZINE in content_sources:
-        sources.append(source.QuantaMagazine(source_uri[QUANTA_MAGAZINE],QUANTA_MAGAZINE))
-    if REUTERS in content_sources:
-        sources.append(source.Reuters(source_uri[REUTERS],REUTERS))
-    if TECH_CRUNCH in content_sources:
-        sources.append(source.TechCrunch(source_uri[TECH_CRUNCH],TECH_CRUNCH))
-    if WIRED in content_sources:
-        sources.append(source.Wired(source_uri[WIRED],WIRED))
-    if BBC in content_sources:
-        sources.append(source.BBC(source_uri[BBC],BBC))
-    if THE_VERGE in content_sources:
-        sources.append(source.TheVerge(source_uri[THE_VERGE],THE_VERGE))
-    return sources
+home_content_sources = [ QUANTA_MAGAZINE, WIRED, REUTERS, TECH_CRUNCH, BBC, THE_VERGE ]
+science_content_sources = [ THE_VERGE, TECH_CRUNCH, REUTERS, BUZZFEED, TNW, NY_TIMES ]
 
 
 def populate_sources(sources,responses):
@@ -71,8 +51,7 @@ async def fetch_sources(sources):
 @app.route('/home',methods=['GET'])
 def home():
 
-    content_sources = [ QUANTA_MAGAZINE, WIRED, REUTERS, TECH_CRUNCH, BBC, THE_VERGE ]
-    sources = instantiate_sources(content_sources)
+    sources = page_sources.Home(home_content_sources).sources
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -85,4 +64,6 @@ def home():
 
 @app.route('/science')
 def science_posts():
-    content_sources = []
+    
+
+    return render_template('science.htm',sources=None)

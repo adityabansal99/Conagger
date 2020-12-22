@@ -14,10 +14,6 @@ class Source():
     def uri(self):
         return self._uri
 
-    @uri.setter
-    def uri(self,uri_val):
-        self._uri = uri_val
-
     @property
     def response(self):
         return self._response
@@ -46,7 +42,20 @@ class QuantaMagazine(Source):
     """
     QuantaMagazine content parsing and management
     """
+    _home_uri = 'https://www.quantamagazine.org'
+
+    @classmethod
+    def create_for_home(cls,source_name):
+        return cls(cls._home_uri, source_name)
+
+
     def _parse(self):
+        if self._uri == QuantaMagazine._home_uri:
+            self._parse_for_home()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+
+    def _parse_for_home(self):
 
         # Main post 
         self._posts[self._soup.select("h1.noe:nth-child(1)")[0].get_text().strip()] = self._uri + self._soup.select(".hero-title > a")[0]['href']
@@ -70,7 +79,27 @@ class Reuters(Source):
     """
     Reuters content parsing and management
     """
+    _home_uri = 'https://www.reuters.com'
+    _tech_uri = 'https://www.reuters.com/news/technology'
+
+    @classmethod
+    def create_for_home(cls,source_name):
+        return cls(cls._home_uri,source_name)
+
+    @classmethod
+    def create_for_tech(cls,source_name):
+        return cls(cls._tech_uri,source_name)
+
+
     def _parse(self):
+        if self._uri == Reuters._home_uri:
+            self._parse_for_home()
+        elif self._uri == Reuters._tech_uri:
+            self._parse_for_tech()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+
+    def _parse_for_home(self):
         
         # Main Post
         self._posts[self._soup.select("section.right-now-module > div:nth-child(2) > h2 > a")[0].get_text().strip()] = \
@@ -94,7 +123,27 @@ class TechCrunch(Source):
     """
     TechCrunch content parsing and management
     """
+    _home_uri = 'https://www.techcrunch.com'
+    _tech_uri = 'https://www.techcrunch.com'
+
+    @classmethod
+    def create_for_home(cls,source_name):
+        return cls(cls._home_uri,source_name)
+
+    @classmethod
+    def create_for_tech(cls,source_name):
+        return cls(cls._tech_uri,source_name)
+
+
     def _parse(self):
+        if self._uri == TechCrunch._home_uri:
+            self._parse_for_home()
+        elif self._uri == TechCrunch._tech_uri:
+            self._parse_for_tech()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+
+    def _parse_for_home(self):
         
         #root > div > div > div > div > div > header > h2 > a
         posts_text = [
@@ -119,7 +168,20 @@ class Wired(Source):
     """
     Wired content parsing and management
     """
+    _home_uri = 'https://www.wired.com'
+
+    @classmethod
+    def create_for_home(cls,source_name):
+        return cls(cls._home_uri,source_name)
+    
+
     def _parse(self):
+        if self._uri == Wired._home_uri:
+            self._parse_for_home()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+
+    def _parse_for_home(self):
         
         # div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)
         posts_text = [
@@ -141,11 +203,32 @@ class Wired(Source):
             self._posts[post_text] = self._uri + post_relative_link
 
 
+
 class TheVerge(Source):
     """
     TheVerge content management and parsing
     """
+    _home_uri = 'https://www.theverge.com'
+    _tech_uri = 'https://www.theverge.com/tech'
+
+    @classmethod
+    def create_for_home(cls,source_name):
+        return cls(cls._home_uri,source_name)
+
+    @classmethod
+    def create_for_tech(cls,source_name):
+        return cls(cls._tech_uri,source_name)
+
+
     def _parse(self):
+        if self._uri == TheVerge._home_uri:
+            self._parse_for_home()
+        elif self._uri == TheVerge._tech_uri:
+            self._parse_for_tech()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+
+    def _parse_for_home(self):
 
         # div.c-seven-up__main > div > div:nth-child(2) > h2 > a
         posts_text = [
@@ -170,7 +253,20 @@ class BBC(Source):
     """
     BBC content management and parsing
     """
+    _home_uri = 'https://www.bbc.com'
+
+    @classmethod
+    def create_for_home(cls,source_name):
+        return cls(cls._home_uri,source_name)
+
+
     def _parse(self):
+        if self._uri == BBC._home_uri:
+            self._parse_for_home()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+
+    def _parse_for_home(self):
 
         # Does not pick reels posts
         # ul.media-list > li > div > a:nth-child(3)
@@ -189,3 +285,69 @@ class BBC(Source):
 
         for post_text, post_link in zip(posts_text,posts_link):
             self._posts[post_text] = post_link
+
+
+
+class BuzzFeed(Source):
+    """
+    BuzzFeed content management and parsing
+    """
+    _tech_uri = 'https://www.buzzfeed.com/tech'
+
+     @classmethod
+    def create_for_tech(cls,source_name):
+        return cls(cls._tech_uri,source_name)
+
+
+    def _parse(self):
+        if self._uri == BuzzFeed._tech_uri:
+            self._parse_for_tech()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+
+    def  _parse_for_tech(self):
+        pass
+
+
+
+class TheNewYorkTimes(Source):
+    """
+    BuzzFeed content management and parsing
+    """
+    _tech_uri = 'https://www.nytimes.com/section/technology'
+
+     @classmethod
+    def create_for_tech(cls,source_name):
+        return cls(cls._tech_uri,source_name)
+
+
+    def _parse(self):
+        if self._uri == TheNewYorkTimes._tech_uri:
+            self._parse_for_tech()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+
+    def  _parse_for_tech(self):
+        pass
+
+
+
+class TheNextWeb(Source):
+    """
+    BuzzFeed content management and parsing
+    """
+    _tech_uri = 'https://thenextweb.com/'
+
+     @classmethod
+    def create_for_tech(cls,source_name):
+        return cls(cls._tech_uri,source_name)
+
+
+    def _parse(self):
+        if self._uri == TheNextWeb._tech_uri:
+            self._parse_for_tech()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+
+    def  _parse_for_tech(self):
+        pass
