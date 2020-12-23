@@ -58,15 +58,15 @@ class Tech():
     def _instantiate_sources(content_sources):
         sources = []
         if BUZZFEED in content_sources:
-            sources.append(source.BUZZFEED.create_for_tech(BUZZFEED))
+            sources.append(source.BuzzFeed.create_for_tech(BUZZFEED))
         if REUTERS in content_sources:
             sources.append(source.Reuters.create_for_tech(REUTERS))
         if TECH_CRUNCH in content_sources:
             sources.append(source.TechCrunch.create_for_tech(TECH_CRUNCH))
         if NY_TIMES in content_sources:
-            sources.append(source.NY_TIMES.create_for_tech(NY_TIMES))
+            sources.append(source.TheNewYorkTimes.create_for_tech(NY_TIMES))
         if TNW in content_sources:
-            sources.append(source.TNW.create_for_tech(TNW))
+            sources.append(source.TheNextWeb.create_for_tech(TNW))
         if THE_VERGE in content_sources:
             sources.append(source.TheVerge.create_for_tech(THE_VERGE))
         return sources

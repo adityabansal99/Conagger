@@ -15,7 +15,7 @@ NY_TIMES = 'The New York Times'
 TNW = 'The Next Web'
 
 home_content_sources = [ QUANTA_MAGAZINE, WIRED, REUTERS, TECH_CRUNCH, BBC, THE_VERGE ]
-science_content_sources = [ THE_VERGE, TECH_CRUNCH, REUTERS, BUZZFEED, TNW, NY_TIMES ]
+tech_content_sources = [ THE_VERGE, TECH_CRUNCH, REUTERS, BUZZFEED, TNW, NY_TIMES ]
 
 
 def populate_sources(sources,responses):
@@ -64,6 +64,10 @@ def home():
 
 @app.route('/science')
 def science_posts():
-    
+    sources = page_sources.Tech(tech_content_sources).sources
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    responses = loop.run_until_complete(fetch_sources(sources))
+    populate_sources(sources,responses)
 
     return render_template('science.htm',sources=None)
