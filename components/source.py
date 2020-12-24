@@ -8,6 +8,7 @@ class Source():
     def __init__(self,uri,source_name):
         self._uri = uri
         self._posts = dict()
+        self._posts_desc = dict()
         self._source_name = source_name
 
     @property
@@ -32,6 +33,34 @@ class Source():
     @property
     def source_name(self):
         return self._source_name
+
+    @property
+    def posts_desc(self):
+        return self._posts_desc
+
+    @staticmethod
+    def _get_titles(css_selector):
+        posts_title = [
+            heading.get_text().strip() 
+            for heading in self._soup.select(css_selector)
+        ]
+        return posts_title
+
+    @staticmethod
+    def _get_links(css_selector):
+        posts_link = [
+            link['href'] 
+            for link in self._soup.select(css_selector)
+        ]
+        return posts_link
+
+    @staticmethod
+    def _get_descriptions(css_selector):
+        posts_desc = [
+            desc.get_text().strip() 
+            for desc in self._soup.select(css_selector)
+        ]
+        return posts_desc
 
     def _parse(self):
         raise NotImplementedError("Parse Method is not implemented for source: ",type(self).__name__)
@@ -61,14 +90,9 @@ class QuantaMagazine(Source):
         self._posts[self._soup.select("h1.noe:nth-child(1)")[0].get_text().strip()] = QuantaMagazine._home_uri + self._soup.select(".hero-title > a")[0]['href']
     
         # div.home__posts--top > div > div > div.card__content > a > h2
-        posts_text = [
-            heading.get_text().strip() 
-            for heading in self._soup.select("div.two--large > div:nth-child(1) > div:nth-child(2) > a:nth-child(2) > h2:nth-child(1)")
-        ]
-        posts_relative_link =[
-            link['href'] 
-            for link in self._soup.select("div.two--large > div:nth-child(1) > div:nth-child(2) > a")
-        ]
+        posts_text = self._get_titles("div.two--large > div:nth-child(1) > div:nth-child(2) > a:nth-child(2) > h2:nth-child(1)")
+        
+        posts_relative_link = self._get_links("div.two--large > div:nth-child(1) > div:nth-child(2) > a")
 
         for post_text, post_relative_link in zip(posts_text,posts_relative_link):
             self._posts[post_text] = QuantaMagazine._home_uri + post_relative_link
@@ -104,31 +128,17 @@ class Reuters(Source):
         self._posts[self._soup.select("section.right-now-module > div:nth-child(2) > h2 > a")[0].get_text().strip()] = \
         Reuters._home_uri + self._soup.select("section.right-now-module > div:nth-child(2) >h2 > a")[0]['href']
 
-        posts_text = [
-            heading.get_text().strip() 
-            for heading in self._soup.select("#hp-top-news-top > section > div > article > div > a > h3")
-        ]
-        posts_relative_link =[
-            link['href'] 
-            for link in self._soup.select("#hp-top-news-top > section > div > article > div > a")
-        ]
+        posts_text = self._get_titles("#hp-top-news-top > section > div > article > div > a > h3")
+        
+        posts_relative_link =self._get_links("#hp-top-news-top > section > div > article > div > a")
 
         for post_text, post_relative_link in zip(posts_text,posts_relative_link):
             self._posts[post_text] = Reuters._home_uri + post_relative_link
     
     def _parse_for_tech(self):
-        posts_text = [
-            heading.get_text().strip() 
-            for heading in self._soup.select("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)> h3")
-        ]
-        posts_relative_link = [
-            link['href'] 
-            for link in self._soup.select("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)")
-        ]
-
-        # Will refactor later
-        posts_text = posts_text[:6]
-        posts_link = posts_relative_link[:6]
+        posts_text = self._get_titles("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)> h3")
+        
+        posts_relative_link = self._get_links("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)")
 
         for post_text, post_relative_link in zip(posts_text,posts_relative_link):
             self._posts[post_text] = Reuters._home_uri + post_relative_link    
@@ -161,21 +171,18 @@ class TechCrunch(Source):
     def _parse_for_home(self):
         
         #root > div > div > div > div > div > header > h2 > a
-        posts_text = [
-            heading.get_text().strip() 
-            for heading in self._soup.select("#root > div > div > div > div > div > header > h2 > a")
-        ]
-        posts_link =[
-            link['href'] 
-            for link in self._soup.select("#root > div > div > div > div > div > header > h2 > a")
+        posts_text = self._get_titles("#root > div > div > div > div > div > header > h2 > a")
+        
+        posts_link =self._get_links("#root > div > div > div > div > div > header > h2 > a")
+        
+        posts_desc = [
+            desc.get_text().strip() 
+            for desc in self._soup.select("#root > div > div > div > div > div > div")
         ]
 
-        # Will refactor later
-        posts_text = posts_text[:6]
-        posts_link = posts_link[:6]
-
-        for post_text, post_link in zip(posts_text,posts_link):
+        for post_text, post_link, post_desc in zip(posts_text,posts_link,posts_desc):
             self._posts[post_text] = post_link
+            self._posts_desc[post_text] = post_desc
     
     def _parse_for_tech(self):
         self._parse_for_home()
@@ -202,20 +209,11 @@ class Wired(Source):
     def _parse_for_home(self):
         
         # div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)
-        posts_text = [
-                heading.get_text().strip() 
-                for heading in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2) > h2")
-        ] + [
-                heading.get_text().strip() 
-                for heading in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2) > h2")
-        ]
-        posts_relative_link =[
-            link['href'] 
-            for link in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)")
-        ] + [
-            link['href'] 
-            for link in self._soup.select("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2)")
-        ]
+        posts_text = list(self._get_titles("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2) > h2") + 
+                self._get_titles("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2) > h2"))
+        
+        posts_relative_link = list(self._get_links("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)")
+        + self._get_links("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2)"))
 
         for post_text, post_relative_link in zip(posts_text,posts_relative_link):
             self._posts[post_text] = Wired._home_uri + post_relative_link
@@ -246,44 +244,24 @@ class TheVerge(Source):
         else:
             raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
+
     def _parse_for_home(self):
 
         # div.c-seven-up__main > div > div:nth-child(2) > h2 > a
-        posts_text = [
-            heading.get_text().strip() 
-            for heading in self._soup.select("div.c-seven-up__main > div > div:nth-child(2) > h2 > a")
-        ]
-        posts_link =[
-            link['href'] 
-            for link in self._soup.select("div.c-seven-up__main > div > div:nth-child(2) > h2 > a")
-        ]
+        posts_text = self._get_titles("div.c-seven-up__main > div > div:nth-child(2) > h2 > a")
         
-        # Will refactor later
-        posts_text = posts_text[:6]
-        posts_link = posts_link[:6]
-
+        posts_link =self._get_links("div.c-seven-up__main > div > div:nth-child(2) > h2 > a")
+        
         for post_text, post_link in zip(posts_text,posts_link):
             self._posts[post_text] = post_link
 
-    def _parse_for_tech(self):
-        posts_text = [
-            heading.get_text().strip() 
-            for heading in self._soup.select("div.l-hero > section > div > div > div > h3 > a")
-        ] + [
-            heading.get_text().strip() 
-            for heading in self._soup.select("div.l-reskin > div > div > div:nth-child(1) > div > div > div > div:nth-child(2) > h2 > a")
-        ]
-        posts_link =[
-            link['href'] 
-            for link in self._soup.select("div.l-hero > section > div > div > div > h3 > a")
-        ] + [
-            link['href'] 
-            for link in self._soup.select("div.l-reskin > div > div > div:nth-child(1) > div > div > div > div:nth-child(2) > h2 > a")
-        ]
 
-        # Will refactor later
-        posts_text = posts_text[:6]
-        posts_link = posts_link[:6]
+    def _parse_for_tech(self):
+        posts_text = list(self._get_titles("div.l-hero > section > div > div > div > h3 > a") + 
+        self._get_titles("div.l-reskin > div > div > div:nth-child(1) > div > div > div > div:nth-child(2) > h2 > a"))
+        
+        posts_link = list(self._get_links("div.l-hero > section > div > div > div > h3 > a")
+        + self._get_links("div.l-reskin > div > div > div:nth-child(1) > div > div > div > div:nth-child(2) > h2 > a"))
 
         for post_text, post_link in zip(posts_text,posts_link):
             self._posts[post_text] = post_link
@@ -312,18 +290,9 @@ class BBC(Source):
 
         # Does not pick reels posts
         # ul.media-list > li > div > a:nth-child(3)
-        posts_text = [
-            heading.get_text().strip() 
-            for heading in self._soup.select("ul.media-list > li > div > a:nth-child(3)")
-        ]
-        posts_link =[
-            link['href'] 
-            for link in self._soup.select("ul.media-list > li > div > a:nth-child(3)")
-        ]
-
-        # Will refactor later
-        posts_text = posts_text[:6]
-        posts_link = posts_link[:6]
+        posts_text = self._get_titles("ul.media-list > li > div > a:nth-child(3)")
+        
+        posts_link =self._get_links("ul.media-list > li > div > a:nth-child(3)")
 
         for post_text, post_link in zip(posts_text,posts_link):
             self._posts[post_text] = post_link
@@ -349,21 +318,15 @@ class BuzzFeed(Source):
             raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
     def  _parse_for_tech(self):
-        posts_text = [
-            heading.get_text().strip() 
-            for heading in self._soup.select("#buzz-content > div > div.feed-cards > article > div:nth-child(3) > div > h2> a")
-        ]
-        posts_link =[
-            link['href'] 
-            for link in self._soup.select("#buzz-content > div > div.feed-cards > article > div:nth-child(3) > div > h2> a")
-        ]
+        posts_text = self._get_titles("#buzz-content > div > div.feed-cards > article > div:nth-child(3) > div > h2> a")
+        
+        posts_link =self._get_links("#buzz-content > div > div.feed-cards > article > div:nth-child(3) > div > h2> a")
+        
+        posts_desc = self._get_descriptions("#buzz-content > div > div.feed-cards > article > div:nth-child(3) > div >p")
 
-        # Will refactor later
-        posts_text = posts_text[:6]
-        posts_link = posts_link[:6]
-
-        for post_text, post_link in zip(posts_text,posts_link):
+        for post_text, post_link, post_desc in zip(posts_text,posts_link,posts_desc):
             self._posts[post_text] = post_link
+            self._posts_desc[post_text] = post_desc
 
 
 
@@ -371,6 +334,7 @@ class TheNewYorkTimes(Source):
     """
     BuzzFeed content management and parsing
     """
+    _home_uri = 'https://www.nytimes.com'
     _tech_uri = 'https://www.nytimes.com/section/technology'
 
     @classmethod
@@ -384,8 +348,21 @@ class TheNewYorkTimes(Source):
         else:
             raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
+
     def  _parse_for_tech(self):
-        pass
+        posts_text = list(self._get_titles("#collection-highlights-container>div>ol>li>article>div>h2>a")
+        + self._get_titles("#collection-technology>div:nth-child(2)>section:nth-child(3)>ol>li>article>div>h2>a"))
+        
+        posts_relative_link = list(self._get_links("#collection-highlights-container>div>ol>li>article>div>h2>a")
+        + self._get_links("#collection-technology>div:nth-child(2)>section:nth-child(3)>ol>li>article>div>h2>a"))
+        
+        posts_desc = list(self._get_descriptions("#collection-highlights-container>div>ol>li>article>div>p.css-1jhf0lz")
+        + self._get_descriptions("#collection-technology>div:nth-child(2)>section:nth-child(3)>ol>li>article>div>p:nth-child(2)"))
+
+        for post_text, post_relative_link, post_desc in zip(posts_text,posts_relative_link,posts_desc):
+            self._posts[post_text] = Wired._home_uri + post_relative_link
+            self._posts_desc[post_text] = post_desc
+        
 
 
 
@@ -408,4 +385,13 @@ class TheNextWeb(Source):
             raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
     def  _parse_for_tech(self):
-        pass
+        self._posts[self._soup.select("ul.c-coverStories>li>div>h2>a")[0].get_text().strip()] = self._soup.select("ul.c-coverStories>li>div>h2>a")[0]['href']
+       
+        posts_text = list(self._get_titles("ul.c-coverStories>li>div>h3>a")
+        + self._get_titles("ul.c-posts>li>div:nth-child(1)>h3>a"))
+        
+        posts_link = list(self._get_links("ul.c-coverStories>li>div>h3>a")
+        + self._get_links("ul.c-posts>li>div:nth-child(1)>h3>a"))        
+
+        for post_text, post_link in zip(posts_text,posts_link):
+            self._posts[post_text] = post_link
