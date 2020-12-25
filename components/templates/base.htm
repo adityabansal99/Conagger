@@ -17,7 +17,7 @@
         </button>
         <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
           <div class="navbar-nav" style="padding-right: 3%;">
-            <a class="nav-link active" href="{{ url_for(request.endpoint) }} " style="font-size: 115%;">Home</a>
+            <a class="nav-link active" href="/home" style="font-size: 115%;">Home</a>
             <a class="nav-link" href="/science" style="font-size: 115%;">Science</a>
             <a class="nav-link" href="/tech" style="font-size: 115%;">Tech</a>
             <a class="nav-link" href="#">Add Source</a>
@@ -25,35 +25,6 @@
           </div>
         </div>
       </nav>
-    <div class= "container" style="background-color: #f7fbfc;">
-        {% for source_row in sources|batch(2) %}
-        <div class="card-group">
-            {% for source in source_row %}
-            <div class="card border-light">
-                <div class="card-body" style="background-color: #f7fbfc;">
-                    <div class="text-center card-title">
-                        <a href="{{ source.uri }}" class="h3">
-                            <span style="color:#0f4c75">{{ source.source_name }}</span>
-                        </a>
-                    </div>
-                    <div>
-                        <ul style="list-style: none;">
-                            {% for post_heading, post_link in source.posts.items() %}
-                            <li style="padding: 3px 0 0px 0; border-bottom: 1px solid #eeeded;">
-                                <a href="{{ post_link }}" target="_blank" class="card-link">
-                                    <span style="color: #1b262c; font-size: 110%;">{{post_heading}}</span>
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endfor %}
-    </div>
-    <!-- Inheritance not working :( -->
-    <!-- {% block content %}{% endblock %} -->
+    {% block content %}{% endblock %}
 </body>
 </html>

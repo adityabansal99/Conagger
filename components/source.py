@@ -5,6 +5,10 @@ class Source():
     Base class for all content sources
     Should not be used to instantiate objects
     """
+    _home_uri = None
+    _tech_uri = None
+    _science_uri = None
+
     def __init__(self,uri,source_name):
         self._uri = uri
         self._posts = dict()
@@ -38,32 +42,64 @@ class Source():
     def posts_desc(self):
         return self._posts_desc
 
-    @staticmethod
-    def _get_titles(css_selector):
+    @classmethod
+    def create_for_home(cls,source_name):
+        if cls._home_uri == None:
+            raise NotImplementedError(cls.__name__+" does not support home configuration")
+        return cls(cls._home_uri, source_name)
+
+    @classmethod
+    def create_for_tech(cls,source_name):
+        if cls._tech_uri == None:
+            raise NotImplementedError(cls.__name__+" does not support tech configuration")
+        return cls(cls._tech_uri,source_name)
+
+    def _get_titles(self,css_selector):
         posts_title = [
             heading.get_text().strip() 
             for heading in self._soup.select(css_selector)
         ]
         return posts_title
 
-    @staticmethod
-    def _get_links(css_selector):
+    def _get_links(self,css_selector):
         posts_link = [
             link['href'] 
             for link in self._soup.select(css_selector)
         ]
         return posts_link
 
-    @staticmethod
-    def _get_descriptions(css_selector):
+    def _get_descriptions(self,css_selector):
         posts_desc = [
             desc.get_text().strip() 
             for desc in self._soup.select(css_selector)
         ]
         return posts_desc
 
+    def _set_posts_and_desc(self, posts_text, posts_link, posts_desc=None, desc_available=True, link_relative=False):
+        if desc_available:
+            for post_text, post_link, post_desc in  zip(posts_text, posts_link, posts_desc):
+                if link_relative:
+                    self._posts[post_text] = type(self)._home_uri + post_link
+                else:
+                    self._posts[post_text] = post_link
+                self._posts_desc[post_text] = post_desc
+        else:
+            for post_text, post_link in  zip(posts_text, posts_link):
+                if link_relative:
+                    self._posts[post_text] = type(self)._home_uri + post_link
+                else:
+                    self._posts[post_text] = post_link
+
+
     def _parse(self):
-        raise NotImplementedError("Parse Method is not implemented for source: ",type(self).__name__)
+        if self._uri == type(self)._home_uri:
+            self._parse_for_home()
+        elif self._uri == type(self)._tech_uri:
+            self._parse_for_tech()
+        elif self._uri == type(self)._science_uri:
+            self._parse_for_science()
+        else:
+            raise NotImplementedError("Parse method not implemented for given uri: "+self._uri+" by "+self._source_name)
 
 
 
@@ -73,29 +109,21 @@ class QuantaMagazine(Source):
     """
     _home_uri = 'https://www.quantamagazine.org'
 
-    @classmethod
-    def create_for_home(cls,source_name):
-        return cls(cls._home_uri, source_name)
-
-
-    def _parse(self):
-        if self._uri == QuantaMagazine._home_uri:
-            self._parse_for_home()
-        else:
-            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
     def _parse_for_home(self):
 
         # Main post 
-        self._posts[self._soup.select("h1.noe:nth-child(1)")[0].get_text().strip()] = QuantaMagazine._home_uri + self._soup.select(".hero-title > a")[0]['href']
-    
+        self._posts[self._get_titles("h1.noe:nth-child(1)")[0]] = QuantaMagazine._home_uri + self._get_links(".hero-title > a")[0]
+        self._posts_desc[self._get_titles("h1.noe:nth-child(1)")[0]] = self._get_descriptions("div.cws__content > div:nth-child(1) > div.p > small > span > p")[0]
+
         # div.home__posts--top > div > div > div.card__content > a > h2
         posts_text = self._get_titles("div.two--large > div:nth-child(1) > div:nth-child(2) > a:nth-child(2) > h2:nth-child(1)")
         
         posts_relative_link = self._get_links("div.two--large > div:nth-child(1) > div:nth-child(2) > a")
 
-        for post_text, post_relative_link in zip(posts_text,posts_relative_link):
-            self._posts[post_text] = QuantaMagazine._home_uri + post_relative_link
+        posts_desc = self._get_descriptions("div.two--large > div:nth-child(1) > div:nth-child(2) > div.card__excerpt >p")
+
+        self._set_posts_and_desc(posts_text, posts_relative_link, posts_desc=posts_desc, link_relative=True)
 
 
 
@@ -106,42 +134,29 @@ class Reuters(Source):
     _home_uri = 'https://www.reuters.com'
     _tech_uri = 'https://www.reuters.com/news/technology'
 
-    @classmethod
-    def create_for_home(cls,source_name):
-        return cls(cls._home_uri,source_name)
-
-    @classmethod
-    def create_for_tech(cls,source_name):
-        return cls(cls._tech_uri,source_name)
-
-
-    def _parse(self):
-        if self._uri == Reuters._home_uri:
-            self._parse_for_home()
-        elif self._uri == Reuters._tech_uri:
-            self._parse_for_tech()
-        else:
-            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
     def _parse_for_home(self):
         # Main Post
-        self._posts[self._soup.select("section.right-now-module > div:nth-child(2) > h2 > a")[0].get_text().strip()] = \
-        Reuters._home_uri + self._soup.select("section.right-now-module > div:nth-child(2) >h2 > a")[0]['href']
+        self._posts[self._get_titles("section.right-now-module > div:nth-child(2) > h2 > a")[0]] = \
+            Reuters._home_uri + self._get_links("section.right-now-module > div:nth-child(2) >h2 > a")[0]
+
+        self._posts_desc[self._get_titles("section.right-now-module > div:nth-child(2) > h2 > a")[0]] = \
+            self._get_descriptions("section.right-now-module > div:nth-child(2) > p")[0]
 
         posts_text = self._get_titles("#hp-top-news-top > section > div > article > div > a > h3")
-        
         posts_relative_link =self._get_links("#hp-top-news-top > section > div > article > div > a")
 
-        for post_text, post_relative_link in zip(posts_text,posts_relative_link):
-            self._posts[post_text] = Reuters._home_uri + post_relative_link
-    
+        self._set_posts_and_desc(posts_text, posts_relative_link, desc_available=False, link_relative=True)
+
+
     def _parse_for_tech(self):
         posts_text = self._get_titles("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)> h3")
         
         posts_relative_link = self._get_links("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)")
 
-        for post_text, post_relative_link in zip(posts_text,posts_relative_link):
-            self._posts[post_text] = Reuters._home_uri + post_relative_link    
+        posts_desc = self._get_descriptions("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > p")
+
+        self._set_posts_and_desc(posts_text, posts_relative_link, posts_desc=posts_desc, link_relative=True)
 
 
 class TechCrunch(Source):
@@ -151,22 +166,6 @@ class TechCrunch(Source):
     _home_uri = 'https://www.techcrunch.com'
     _tech_uri = 'https://www.techcrunch.com'
 
-    @classmethod
-    def create_for_home(cls,source_name):
-        return cls(cls._home_uri,source_name)
-
-    @classmethod
-    def create_for_tech(cls,source_name):
-        return cls(cls._tech_uri,source_name)
-
-
-    def _parse(self):
-        if self._uri == TechCrunch._home_uri:
-            self._parse_for_home()
-        elif self._uri == TechCrunch._tech_uri:
-            self._parse_for_tech()
-        else:
-            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
     def _parse_for_home(self):
         
@@ -180,9 +179,7 @@ class TechCrunch(Source):
             for desc in self._soup.select("#root > div > div > div > div > div > div")
         ]
 
-        for post_text, post_link, post_desc in zip(posts_text,posts_link,posts_desc):
-            self._posts[post_text] = post_link
-            self._posts_desc[post_text] = post_desc
+        self._set_posts_and_desc(posts_text, posts_link, posts_desc=posts_desc)
     
     def _parse_for_tech(self):
         self._parse_for_home()
@@ -194,17 +191,7 @@ class Wired(Source):
     Wired content parsing and management
     """
     _home_uri = 'https://www.wired.com'
-
-    @classmethod
-    def create_for_home(cls,source_name):
-        return cls(cls._home_uri,source_name)
-    
-
-    def _parse(self):
-        if self._uri == Wired._home_uri:
-            self._parse_for_home()
-        else:
-            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
+  
 
     def _parse_for_home(self):
         
@@ -215,8 +202,7 @@ class Wired(Source):
         posts_relative_link = list(self._get_links("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div > ul > li:nth-child(2) > a:nth-child(2)")
         + self._get_links("div.homepage-main > div.primary-grid-component > div > div.cards-component > div.cards-component__row > div > div >div> ul > li:nth-child(2) > a:nth-child(2)"))
 
-        for post_text, post_relative_link in zip(posts_text,posts_relative_link):
-            self._posts[post_text] = Wired._home_uri + post_relative_link
+        self._set_posts_and_desc(posts_text, posts_relative_link, desc_available=False, link_relative=True)
 
 
 
@@ -226,23 +212,6 @@ class TheVerge(Source):
     """
     _home_uri = 'https://www.theverge.com'
     _tech_uri = 'https://www.theverge.com/tech'
-
-    @classmethod
-    def create_for_home(cls,source_name):
-        return cls(cls._home_uri,source_name)
-
-    @classmethod
-    def create_for_tech(cls,source_name):
-        return cls(cls._tech_uri,source_name)
-
-
-    def _parse(self):
-        if self._uri == TheVerge._home_uri:
-            self._parse_for_home()
-        elif self._uri == TheVerge._tech_uri:
-            self._parse_for_tech()
-        else:
-            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
 
     def _parse_for_home(self):
@@ -263,10 +232,8 @@ class TheVerge(Source):
         posts_link = list(self._get_links("div.l-hero > section > div > div > div > h3 > a")
         + self._get_links("div.l-reskin > div > div > div:nth-child(1) > div > div > div > div:nth-child(2) > h2 > a"))
 
-        for post_text, post_link in zip(posts_text,posts_link):
-            self._posts[post_text] = post_link
-        
-        
+        self._set_posts_and_desc(posts_text, posts_link, desc_available=False)
+
 
 
 class BBC(Source):
@@ -275,16 +242,6 @@ class BBC(Source):
     """
     _home_uri = 'https://www.bbc.com'
 
-    @classmethod
-    def create_for_home(cls,source_name):
-        return cls(cls._home_uri,source_name)
-
-
-    def _parse(self):
-        if self._uri == BBC._home_uri:
-            self._parse_for_home()
-        else:
-            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
     def _parse_for_home(self):
 
@@ -294,8 +251,7 @@ class BBC(Source):
         
         posts_link =self._get_links("ul.media-list > li > div > a:nth-child(3)")
 
-        for post_text, post_link in zip(posts_text,posts_link):
-            self._posts[post_text] = post_link
+        self._set_posts_and_desc(posts_text, posts_link, desc_available=False)
 
 
 
@@ -306,27 +262,15 @@ class BuzzFeed(Source):
     _home_uri = 'https://www.buzzfeed.com'
     _tech_uri = 'https://www.buzzfeed.com/tech'
 
-    @classmethod
-    def create_for_tech(cls,source_name):
-        return cls(cls._tech_uri,source_name)
-
-
-    def _parse(self):
-        if self._uri == BuzzFeed._tech_uri:
-            self._parse_for_tech()
-        else:
-            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
     def  _parse_for_tech(self):
         posts_text = self._get_titles("#buzz-content > div > div.feed-cards > article > div:nth-child(3) > div > h2> a")
         
-        posts_link =self._get_links("#buzz-content > div > div.feed-cards > article > div:nth-child(3) > div > h2> a")
+        posts_link = self._get_links("#buzz-content > div > div.feed-cards > article > div:nth-child(3) > div > h2> a")
         
         posts_desc = self._get_descriptions("#buzz-content > div > div.feed-cards > article > div:nth-child(3) > div >p")
 
-        for post_text, post_link, post_desc in zip(posts_text,posts_link,posts_desc):
-            self._posts[post_text] = post_link
-            self._posts_desc[post_text] = post_desc
+        self._set_posts_and_desc(posts_text, posts_link, posts_desc=posts_desc)
 
 
 
@@ -337,16 +281,6 @@ class TheNewYorkTimes(Source):
     _home_uri = 'https://www.nytimes.com'
     _tech_uri = 'https://www.nytimes.com/section/technology'
 
-    @classmethod
-    def create_for_tech(cls,source_name):
-        return cls(cls._tech_uri,source_name)
-
-
-    def _parse(self):
-        if self._uri == TheNewYorkTimes._tech_uri:
-            self._parse_for_tech()
-        else:
-            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
 
     def  _parse_for_tech(self):
@@ -359,10 +293,7 @@ class TheNewYorkTimes(Source):
         posts_desc = list(self._get_descriptions("#collection-highlights-container>div>ol>li>article>div>p.css-1jhf0lz")
         + self._get_descriptions("#collection-technology>div:nth-child(2)>section:nth-child(3)>ol>li>article>div>p:nth-child(2)"))
 
-        for post_text, post_relative_link, post_desc in zip(posts_text,posts_relative_link,posts_desc):
-            self._posts[post_text] = Wired._home_uri + post_relative_link
-            self._posts_desc[post_text] = post_desc
-        
+        self._set_posts_and_desc(posts_text, posts_relative_link, posts_desc=posts_desc, link_relative=True)
 
 
 
@@ -373,16 +304,6 @@ class TheNextWeb(Source):
     _home_uri = 'https://thenextweb.com/'
     _tech_uri = 'https://thenextweb.com/neural'
 
-    @classmethod
-    def create_for_tech(cls,source_name):
-        return cls(cls._tech_uri,source_name)
-
-
-    def _parse(self):
-        if self._uri == TheNextWeb._tech_uri:
-            self._parse_for_tech()
-        else:
-            raise NotImplementedError("Parse method not implemented for given uri:",self._uri)
 
     def  _parse_for_tech(self):
         self._posts[self._soup.select("ul.c-coverStories>li>div>h2>a")[0].get_text().strip()] = self._soup.select("ul.c-coverStories>li>div>h2>a")[0]['href']
@@ -393,5 +314,4 @@ class TheNextWeb(Source):
         posts_link = list(self._get_links("ul.c-coverStories>li>div>h3>a")
         + self._get_links("ul.c-posts>li>div:nth-child(1)>h3>a"))        
 
-        for post_text, post_link in zip(posts_text,posts_link):
-            self._posts[post_text] = post_link
+        self._set_posts_and_desc(posts_text, posts_link, desc_available=False)
