@@ -49,6 +49,12 @@ class Source():
         return cls(cls._home_uri, source_name)
 
     @classmethod
+    def create_for_science(cls,source_name):
+        if cls._science_uri == None:
+            raise NotImplementedError(cls.__name__+" does not support science configuration")
+        return cls(cls._science_uri, source_name)
+
+    @classmethod
     def create_for_tech(cls,source_name):
         if cls._tech_uri == None:
             raise NotImplementedError(cls.__name__+" does not support tech configuration")
@@ -108,6 +114,7 @@ class QuantaMagazine(Source):
     QuantaMagazine content parsing and management
     """
     _home_uri = 'https://www.quantamagazine.org'
+    _science_uri = 'https://www.quantamagazine.org'
 
 
     def _parse_for_home(self):
@@ -125,6 +132,9 @@ class QuantaMagazine(Source):
 
         self._set_posts_and_desc(posts_text, posts_relative_link, posts_desc=posts_desc, link_relative=True)
 
+    def _parse_for_science(self):
+        self._parse_for_home()
+
 
 
 class Reuters(Source):
@@ -133,6 +143,7 @@ class Reuters(Source):
     """
     _home_uri = 'https://www.reuters.com'
     _tech_uri = 'https://www.reuters.com/news/technology'
+    _science_uri = 'https://www.reuters.com/news/science'
 
 
     def _parse_for_home(self):
@@ -140,8 +151,8 @@ class Reuters(Source):
         self._posts[self._get_titles("section.right-now-module > div:nth-child(2) > h2 > a")[0]] = \
             Reuters._home_uri + self._get_links("section.right-now-module > div:nth-child(2) >h2 > a")[0]
 
-        self._posts_desc[self._get_titles("section.right-now-module > div:nth-child(2) > h2 > a")[0]] = \
-            self._get_descriptions("section.right-now-module > div:nth-child(2) > p")[0]
+        # self._posts_desc[self._get_titles("section.right-now-module > div:nth-child(2) > h2 > a")[0]] = \
+            # self._get_descriptions("section.right-now-module > div:nth-child(2) > p")[0]
 
         posts_text = self._get_titles("#hp-top-news-top > section > div > article > div > a > h3")
         posts_relative_link =self._get_links("#hp-top-news-top > section > div > article > div > a")
@@ -150,6 +161,16 @@ class Reuters(Source):
 
 
     def _parse_for_tech(self):
+        posts_text = self._get_titles("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)> h3")
+        
+        posts_relative_link = self._get_links("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)")
+
+        posts_desc = self._get_descriptions("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > p")
+
+        self._set_posts_and_desc(posts_text, posts_relative_link, posts_desc=posts_desc, link_relative=True)
+
+
+    def _parse_for_science(self):
         posts_text = self._get_titles("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)> h3")
         
         posts_relative_link = self._get_links("#content > section:nth-child(4) > div > div.column1 > section.module > section > div > article > div:nth-child(2) > a:nth-child(1)")
@@ -212,6 +233,7 @@ class TheVerge(Source):
     """
     _home_uri = 'https://www.theverge.com'
     _tech_uri = 'https://www.theverge.com/tech'
+    _science_uri = 'https://www.theverge.com/science'
 
 
     def _parse_for_home(self):
@@ -226,6 +248,16 @@ class TheVerge(Source):
 
 
     def _parse_for_tech(self):
+        posts_text = list(self._get_titles("div.l-hero > section > div > div > div > h3 > a") + 
+        self._get_titles("div.l-reskin > div > div > div:nth-child(1) > div > div > div > div:nth-child(2) > h2 > a"))
+        
+        posts_link = list(self._get_links("div.l-hero > section > div > div > div > h3 > a")
+        + self._get_links("div.l-reskin > div > div > div:nth-child(1) > div > div > div > div:nth-child(2) > h2 > a"))
+
+        self._set_posts_and_desc(posts_text, posts_link, desc_available=False)
+
+
+    def _parse_for_science(self):
         posts_text = list(self._get_titles("div.l-hero > section > div > div > div > h3 > a") + 
         self._get_titles("div.l-reskin > div > div > div:nth-child(1) > div > div > div > div:nth-child(2) > h2 > a"))
         

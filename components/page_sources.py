@@ -41,7 +41,25 @@ class Home():
 
 
 class Science():
-    pass
+
+    def __init__(self,sources):
+        self._sources = self._instantiate_sources(sources)
+
+    @property
+    def sources(self):
+        return self._sources
+
+
+    @staticmethod
+    def _instantiate_sources(content_sources):
+        sources = []
+        if  QUANTA_MAGAZINE in content_sources:
+            sources.append(source.QuantaMagazine.create_for_science(QUANTA_MAGAZINE))
+        if REUTERS in content_sources:
+            sources.append(source.Reuters.create_for_science(REUTERS))
+        if THE_VERGE in content_sources:
+            sources.append(source.TheVerge.create_for_science(THE_VERGE))
+        return sources
 
 
 class Tech():
