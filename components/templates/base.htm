@@ -7,7 +7,14 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" crossorigin="anonymous">
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet" >
-
+    <script>
+        // $(document).ready(function(){
+        //     $('[data-toggle="tooltip"]').tooltip();   
+        // });
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+        })
+    </script>
 </head>
 <body id = 'root-body' style="background-color: #f7fbfc;">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">

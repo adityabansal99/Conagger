@@ -90,3 +90,18 @@ def tech_posts():
     responses = None
 
     return render_template('posts.htm',sources=sources)
+
+
+@app.route('/science')
+def tech_posts():
+    sources = page_sources.Science(science_content_sources).sources
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    # loop = asyncio.get_event_loop()
+    responses = loop.run_until_complete(fetch_sources(sources))
+
+    populate_sources(sources,responses)
+    responses = None
+
+    return render_template('posts.htm',sources=sources)
