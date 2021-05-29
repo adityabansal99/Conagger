@@ -17,8 +17,17 @@
                         {% for post_heading, post_link in source.posts.items() %}
                             {% if loop.index < 7 %}
                             <li style="padding: 3px 0 0px 0; border-bottom: 1px solid #eeeded;">
+                                {% if post_heading in source.posts_desc %}
+                                    {% set post_description = source.posts_desc[post_heading][:200] %}
+                                {% else %}
+                                    {% set post_description = post_heading %}
+                                {% endif %}
                                 <a href="{{ post_link }}" target="_blank" class="card-link">
-                                    <span style="color: #1b262c; font-size: 110%;">{{post_heading|e}}</span>
+                                    <span style="color: #1b262c; font-size: 110%;" 
+                                    data-placement="top" data-toggle="tooltip" data-html="true" 
+                                    title="<em>hi</em>">
+                                        {{post_heading|e}}
+                                    </span>
                                 </a>
                             </li>
                             {% endif %}
