@@ -148,14 +148,17 @@ class Reuters(Source):
 
     def _parse_for_home(self):
         # Main Post
-        self._posts[self._get_titles("section.right-now-module > div:nth-child(2) > h2 > a")[0]] = \
-            Reuters._home_uri + self._get_links("section.right-now-module > div:nth-child(2) >h2 > a")[0]
+        # self._posts[self._get_titles("section.right-now-module > div:nth-child(2) > h2 > a")[0]] = \
+            # Reuters._home_uri + self._get_links("section.right-now-module > div:nth-child(2) >h2 > a")[0]
 
         # self._posts_desc[self._get_titles("section.right-now-module > div:nth-child(2) > h2 > a")[0]] = \
             # self._get_descriptions("section.right-now-module > div:nth-child(2) > p")[0]
 
-        posts_text = self._get_titles("#hp-top-news-top > section > div > article > div > a > h3")
-        posts_relative_link =self._get_links("#hp-top-news-top > section > div > article > div > a")
+        # posts_text = self._get_titles("#hp-top-news-top > section > div > article > div > a > h3")
+        posts_text = self._get_titles("span[class^='MediaStoryCard']")
+        
+        # posts_relative_link =self._get_links("#hp-top-news-top > section > div > article > div > a")
+        posts_relative_link =self._get_links("a[class^='MediaStoryCard']")
 
         self._set_posts_and_desc(posts_text, posts_relative_link, desc_available=False, link_relative=True)
 
@@ -336,14 +339,25 @@ class TheNextWeb(Source):
     _home_uri = 'https://thenextweb.com/'
     _tech_uri = 'https://thenextweb.com/neural'
 
+    def _parse_for_home(self):
+        posts_text = list(self._get_titles("h4.c-card__heading>a")
+        + self._get_titles("section>div>ul>li>a"))
+    
+        posts_link = list(self._get_links("h4.c-card__heading>a")
+        + self._get_links("section>div>ul>li>a"))        
+
+        self._set_posts_and_desc(posts_text, posts_link, desc_available=False, link_relative=True)
+
 
     def  _parse_for_tech(self):
-        self._posts[self._soup.select("ul.c-coverStories>li>div>h2>a")[0].get_text().strip()] = self._soup.select("ul.c-coverStories>li>div>h2>a")[0]['href']
+        # self._posts[self._soup.select("ul.c-coverStories>li>div>h2>a")[0].get_text().strip()] = self._soup.select("ul.c-coverStories>li>div>h2>a")[0]['href']
        
-        posts_text = list(self._get_titles("ul.c-coverStories>li>div>h3>a")
-        + self._get_titles("ul.c-posts>li>div:nth-child(1)>h3>a"))
+        posts_text = list(self._get_titles("h3.c-card__heading>a")
+        + self._get_titles("div.c-articleList>article>div>h4>a"))
         
-        posts_link = list(self._get_links("ul.c-coverStories>li>div>h3>a")
-        + self._get_links("ul.c-posts>li>div:nth-child(1)>h3>a"))        
+        # posts_link = list(self._get_links("ul.c-coverStories>li>div>h3>a")
+        # + self._get_links("ul.c-posts>li>div:nth-child(1)>h3>a"))        
+        posts_link = list(self._get_links("h3.c-card__heading>a")
+        + self._get_links("div.c-articleList>article>div>h4>a"))        
 
-        self._set_posts_and_desc(posts_text, posts_link, desc_available=False)
+        self._set_posts_and_desc(posts_text, posts_link, desc_available=False, link_relative=True)
